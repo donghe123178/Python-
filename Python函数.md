@@ -111,3 +111,109 @@ print(product)
 120
 ```
 
+#### 装饰器
+
+**函数核心理解**
+
+- 函数也是对象，可以把函数赋予变量
+- 可以把函数当作参数，传入另一个函数中
+- 可以在函数里定义函数，函数嵌套
+- 函数的返回值也可以是函数对象，闭包
+
+**装饰器**
+
+- @装饰器函数，等价于，原函数名=装饰器函数（原函数名）
+- 装饰器就是通过装饰器函数，来修改原函数的一些功能，使得原函数不需要修改，也就是扩展了原函数的功能
+
+```python
+# 简单装饰器
+def my_decorator(func):
+    def wrapper():
+        print('wrapper of decorator')
+        func()
+    return wrapper
+# 带参数的装饰器
+def my_decorator(func):
+    def wrapper(message):
+        print('wrapper of decorator')
+        func(message)
+    return wrapper
+# 通用的带参数的装饰器
+def my_decorator(func):
+    def wrapper(*args, **kwargs):
+        print('wrapper of decorator')
+        func(*args, **kwargs)
+    return wrapper
+# 保留原函数的元信息，将原函数的元信息，拷贝到对应的装饰器函数里
+import functools
+def my_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print('wrapper of decorator')
+        func(*args, **kwargs)
+    return wrapper
+
+@my_decorator
+def greet(message):
+    print(message)
+    
+greet('hello world')
+
+# 输出
+wrapper of decorator
+hello world
+
+# 类装饰器，依赖函数__call__()
+class Count:
+    def __init__(self, func):
+        self.func = func
+        self.num_calls = 0
+
+    def __call__(self, *args, **kwargs):
+        self.num_calls += 1
+        print('num of calls is: {}'.format(self.num_calls))
+        return self.func(*args, **kwargs)
+
+@Count
+def example():
+    print("hello world")
+
+example()
+
+# 输出
+num of calls is: 1
+hello world
+```
+
+##### 装饰器用法实例
+
+- 身份认证
+- 日志记录
+
+```python
+# 测试某些函数的执行时间
+import time
+import functools
+
+def log_execution_time(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        res = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"{func.__name__} took {(end - start) * 1000)} ms")
+        return res
+    return wrapper
+    
+@log_execution_time
+def calculate_similarity(items):
+    ...
+```
+
+- 输入合理性检查
+
+- 缓存
+
+  python中内置的LRU cache，@lru_cache，会缓存进程中的函数参数和结果，缓存满了之后，会删除访问时间最早的数据
+
+- 工作中，二次开发，在原来的需求基础上做优化，原逻辑不需要修改的化，只需增加新的业务场景的时候
